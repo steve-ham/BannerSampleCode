@@ -12,6 +12,7 @@
 		AA37AAFD223E29A000BB808F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA37AAFB223E29A000BB808F /* Main.storyboard */; };
 		AA37AAFF223E29A200BB808F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA37AAFE223E29A200BB808F /* Assets.xcassets */; };
 		AA37AB02223E29A200BB808F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA37AB00223E29A200BB808F /* LaunchScreen.storyboard */; };
+		AA37AB0A223E2A9A00BB808F /* BannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA37AB09223E2A9A00BB808F /* BannerView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,6 +23,7 @@
 		AA37AAFE223E29A200BB808F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AA37AB01223E29A200BB808F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		AA37AB03223E29A200BB808F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AA37AB09223E2A9A00BB808F /* BannerView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BannerView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,6 +58,7 @@
 			children = (
 				AA37AAF7223E29A000BB808F /* AppDelegate.swift */,
 				AA37AAF9223E29A000BB808F /* ViewController.swift */,
+				AA37AB09223E2A9A00BB808F /* BannerView.swift */,
 				AA37AAFB223E29A000BB808F /* Main.storyboard */,
 				AA37AAFE223E29A200BB808F /* Assets.xcassets */,
 				AA37AB00223E29A200BB808F /* LaunchScreen.storyboard */,
@@ -137,6 +140,7 @@
 			files = (
 				AA37AAFA223E29A000BB808F /* ViewController.swift in Sources */,
 				AA37AAF8223E29A000BB808F /* AppDelegate.swift in Sources */,
+				AA37AB0A223E2A9A00BB808F /* BannerView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
