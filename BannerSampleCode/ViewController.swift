@@ -16,7 +16,7 @@ class ViewController: UIViewController {
     private var animator: UIViewPropertyAnimator!
     
     private var timer: Timer?
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         configureBannerView()
@@ -26,7 +26,7 @@ class ViewController: UIViewController {
         guard let navigationController = navigationController else {
             return
         }
-        bannerViewHeight = UIApplication.shared.statusBarFrame.height + navigationController.navigationBar.frame.size.height// + 100
+        bannerViewHeight = UIApplication.shared.statusBarFrame.height + navigationController.navigationBar.frame.size.height + 150
         let bannerViewFrame = CGRect(x: 0.0, y: 0, width: navigationController.navigationBar.frame.size.width, height: bannerViewHeight)
         bannerView = BannerView(frame: bannerViewFrame)
         navigationController.view.addSubview(bannerView)
@@ -43,81 +43,110 @@ class ViewController: UIViewController {
         bannerView.addGestureRecognizer(pan)
     }
     
+    var animationState: AnimationState = .isHiding
+    
+    enum AnimationState {
+        case isHiding
+        case isShowing
+    }
+    var fractionComplete: CGFloat!
+    
     @objc private func handlePan(_ recognizer: UIPanGestureRecognizer) {
-        guard let navigationController = navigationController else {
-            return
-        }
-        
-        switch recognizer.state {
-        case .began:
-            timer?.invalidate()
-            animator = UIViewPropertyAnimator(duration: 0.5, curve: .easeIn) {
-                self.bannerViewTopAnchorConstraint.constant = -self.bannerViewHeight
-                navigationController.view.layoutIfNeeded()
+        switch animationState {
+        case .isHiding:
+            switch recognizer.state {
+            case .began:
+                timer?.invalidate()
+                animator.pauseAnimation()
+                fractionComplete = animator.fractionComplete
+            case .changed:
+                let translation = recognizer.translation(in: bannerView)
+                let fraction = (translation.y / -bannerViewHeight) + fractionComplete
+                animator.fractionComplete = fraction
+            case .ended:
+                let velocity = recognizer.velocity(in: bannerView)
+                if animator.fractionComplete > 0.3  || velocity.y <= -100 {
+                    animator.continueAnimation(withTimingParameters: nil, durationFactor: 0)
+                } else {
+                    animator.stopAnimation(true)
+                    showBanner(duration: TimeInterval(2 * animator.fractionComplete))
+                }
+            default:
+                break
             }
-            animator.pauseAnimation()
-        case .changed:
-            let translation = recognizer.translation(in: bannerView)
-            let fraction = translation.y / -bannerViewHeight
-            animator.fractionComplete = fraction
-        case .ended:
-            let velocity = recognizer.velocity(in: bannerView)
-            if animator.fractionComplete > 0.3  || velocity.y <= -100 {
-                animator.continueAnimation(withTimingParameters: nil, durationFactor: 0)
-            } else {
-                animator.stopAnimation(true)
-                showBanner()
-                hideBanner(afterDelay: 3)
+        case .isShowing:
+            switch recognizer.state {
+            case .began:
+                timer?.invalidate()
+                animator.pauseAnimation()
+                fractionComplete = animator.fractionComplete
+            case .changed:
+                let translation = recognizer.translation(in: bannerView)
+                let fraction = (translation.y / bannerViewHeight) + fractionComplete
+                animator.fractionComplete = fraction
+            case .ended:
+                let velocity = recognizer.velocity(in: bannerView)
+                if animator.fractionComplete > 0.3  || velocity.y <= -100 {
+                    animator.continueAnimation(withTimingParameters: nil, durationFactor: 0)
+                } else {
+                    animator.stopAnimation(true)
+                    hideBanner(duration: TimeInterval(2 * animator.fractionComplete))
+                }
+            default:
+                break
             }
-        default:
-            break
         }
     }
-
+    
     @IBAction func clickSwitch(_ sender: UISwitch) {
         timer?.invalidate()
         if sender.isOn {
             showBanner()
-            hideBanner(afterDelay: 3)
         } else {
             hideBanner()
         }
     }
     
-    private func showBanner() {
+    private func showBanner(duration: TimeInterval = 2.0) {
         guard let navigationController = navigationController else {
             return
         }
-        animator = UIViewPropertyAnimator(duration: 0.5, curve: .easeOut) {
+        animationState = .isShowing
+        animator = UIViewPropertyAnimator(duration: duration, curve: .easeOut) {
             self.bannerViewTopAnchorConstraint.constant = 0
             navigationController.view.layoutIfNeeded()
+        }
+        animator.addCompletion { [weak self] position in
+            guard let self = self else { return }
+            self.hideBanner(afterDelay: 2)
         }
         animator.startAnimation()
     }
     
     
-    private func hideBanner(afterDelay delay: Double = 0.0) {
+    private func hideBanner(afterDelay delay: TimeInterval = 0.0, duration: TimeInterval = 2.0) {
         if delay == 0.0  {
-            self.startHideBannerAnimation()
+            startHideBannerAnimation(duration: duration)
         } else {
+            startHideBannerAnimation()
+            animator.pauseAnimation()
             timer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { [weak self] timer in
-                guard let self = self else {
-                    return
-                }
-                self.startHideBannerAnimation()
+                guard let self = self else { return }
+                self.animator.continueAnimation(withTimingParameters: nil, durationFactor: 0)
             }
         }
     }
     
-    private func startHideBannerAnimation() {
+    private func startHideBannerAnimation(duration: TimeInterval = 2.0) {
         guard let navigationController = navigationController else {
             return
         }
-        self.animator = UIViewPropertyAnimator(duration: 0.5, curve: .easeIn) {
+        animationState = .isHiding
+        animator = UIViewPropertyAnimator(duration: duration, curve: .easeIn) {
             self.bannerViewTopAnchorConstraint.constant = -self.bannerViewHeight
             navigationController.view.layoutIfNeeded()
         }
-        self.animator.startAnimation()
+        animator.startAnimation()
     }
 }
 
