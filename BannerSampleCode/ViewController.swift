@@ -101,13 +101,13 @@ class ViewController: UIViewController {
     @IBAction func clickSwitch(_ sender: UISwitch) {
         timer?.invalidate()
         if sender.isOn {
-            showBanner()
+            showBanner(duration: 2)
         } else {
-            hideBanner()
+            hideBanner(duration: 2)
         }
     }
     
-    private func showBanner(duration: TimeInterval = 2.0) {
+    private func showBanner(duration: TimeInterval) {
         guard let navigationController = navigationController else {
             return
         }
@@ -118,17 +118,17 @@ class ViewController: UIViewController {
         }
         animator.addCompletion { [weak self] position in
             guard let self = self else { return }
-            self.hideBanner(afterDelay: 2)
+            self.hideBanner(afterDelay: 2, duration: 2)
         }
         animator.startAnimation()
     }
     
     
-    private func hideBanner(afterDelay delay: TimeInterval = 0.0, duration: TimeInterval = 2.0) {
+    private func hideBanner(afterDelay delay: TimeInterval = 0.0, duration: TimeInterval) {
         if delay == 0.0  {
             startHideBannerAnimation(duration: duration)
         } else {
-            startHideBannerAnimation()
+            startHideBannerAnimation(duration: duration)
             animator.pauseAnimation()
             timer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { [weak self] timer in
                 guard let self = self else { return }
@@ -137,7 +137,7 @@ class ViewController: UIViewController {
         }
     }
     
-    private func startHideBannerAnimation(duration: TimeInterval = 2.0) {
+    private func startHideBannerAnimation(duration: TimeInterval) {
         guard let navigationController = navigationController else {
             return
         }
