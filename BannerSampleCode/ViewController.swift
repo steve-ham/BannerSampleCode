@@ -43,9 +43,10 @@ class ViewController: UIViewController {
         bannerView.addGestureRecognizer(pan)
     }
     
-    var animationState: AnimationState = .isHiding
+    var animationState: AnimationState = .isHidden
     
     enum AnimationState {
+        case isHidden
         case isHiding
         case isShowing
     }
@@ -65,7 +66,7 @@ class ViewController: UIViewController {
                 animator.fractionComplete = fraction
             case .ended:
                 let velocity = recognizer.velocity(in: bannerView)
-                if animator.fractionComplete > 0.3  || velocity.y <= -100 {
+                if animator.fractionComplete > 0.5  || velocity.y <= -300 {
                     animator.continueAnimation(withTimingParameters: nil, durationFactor: 0)
                 } else {
                     animator.stopAnimation(true)
@@ -86,43 +87,45 @@ class ViewController: UIViewController {
                 animator.fractionComplete = fraction
             case .ended:
                 let velocity = recognizer.velocity(in: bannerView)
-                if animator.fractionComplete > 0.3  || velocity.y <= -100 {
-                    animator.continueAnimation(withTimingParameters: nil, durationFactor: 0)
-                } else {
+                if animator.fractionComplete < 0.5  || velocity.y <= -300 {
                     animator.stopAnimation(true)
                     hideBanner(duration: TimeInterval(2 * animator.fractionComplete))
+                } else {
+                    animator.continueAnimation(withTimingParameters: nil, durationFactor: 0)
                 }
             default:
                 break
             }
+        case .isHidden:
+            break
         }
     }
     
     @IBAction func clickSwitch(_ sender: UISwitch) {
-        timer?.invalidate()
         if sender.isOn {
-            showBanner(duration: 2)
+            timer?.invalidate()
+            showBanner(afterDelay: 0, duration: 2)
         } else {
-            hideBanner(duration: 2)
+            if animationState == .isShowing {
+                //timer?.invalidate()
+                let duration = 2 * animator.fractionComplete
+                hideBanner(duration: TimeInterval(duration))
+            }
         }
     }
     
-    private func showBanner(duration: TimeInterval) {
-        guard let navigationController = navigationController else {
-            return
+    private func showBanner(afterDelay delay: TimeInterval = 0.0, duration: TimeInterval) {
+        if delay == 0.0  {
+            startShowBannerAnimation(duration: duration)
+        } else {
+            startShowBannerAnimation(duration: duration)
+            animator.pauseAnimation()
+            timer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { [weak self] timer in
+                guard let self = self else { return }
+                self.animator.continueAnimation(withTimingParameters: nil, durationFactor: 0)
+            }
         }
-        animationState = .isShowing
-        animator = UIViewPropertyAnimator(duration: duration, curve: .easeOut) {
-            self.bannerViewTopAnchorConstraint.constant = 0
-            navigationController.view.layoutIfNeeded()
-        }
-        animator.addCompletion { [weak self] _ in
-            guard let self = self else { return }
-            self.hideBanner(afterDelay: 2, duration: 2)
-        }
-        animator.startAnimation()
     }
-    
     
     private func hideBanner(afterDelay delay: TimeInterval = 0.0, duration: TimeInterval) {
         if delay == 0.0  {
@@ -137,17 +140,48 @@ class ViewController: UIViewController {
         }
     }
     
+    private func startShowBannerAnimation(duration: TimeInterval) {
+        guard let navigationController = navigationController else {
+            return
+        }
+        guard animationState == .isHiding || animationState == .isHidden else {
+            return
+        }
+        if animationState == .isHiding {
+            animator.stopAnimation(true)
+        }
+        animationState = .isShowing
+        
+        animator = UIViewPropertyAnimator(duration: duration, curve: .easeOut) {
+            self.bannerViewTopAnchorConstraint.constant = 0
+            navigationController.view.layoutIfNeeded()
+        }
+        animator.addCompletion { [weak self] _ in
+            guard let self = self else { return }
+            print("startShowBannerAnimation completion")
+            self.hideBanner(afterDelay: 2, duration: 2)
+        }
+        animator.startAnimation()
+    }
+    
     private func startHideBannerAnimation(duration: TimeInterval) {
         guard let navigationController = navigationController else {
             return
         }
+        guard animationState == .isShowing else {
+            return
+        }
+        animator.stopAnimation(true)
         animationState = .isHiding
+        
         animator = UIViewPropertyAnimator(duration: duration, curve: .easeIn) {
             self.bannerViewTopAnchorConstraint.constant = -self.bannerViewHeight
             navigationController.view.layoutIfNeeded()
         }
-        animator.addCompletion { _ in
+        animator.addCompletion { [weak self] _ in
+            guard let self = self else { return }
             print("startHideBannerAnimation completion")
+            self.animationState = .isHidden
         }
         animator.startAnimation()
     }
