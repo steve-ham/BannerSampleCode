@@ -116,7 +116,7 @@ class ViewController: UIViewController {
             self.bannerViewTopAnchorConstraint.constant = 0
             navigationController.view.layoutIfNeeded()
         }
-        animator.addCompletion { [weak self] position in
+        animator.addCompletion { [weak self] _ in
             guard let self = self else { return }
             self.hideBanner(afterDelay: 2, duration: 2)
         }
@@ -145,6 +145,9 @@ class ViewController: UIViewController {
         animator = UIViewPropertyAnimator(duration: duration, curve: .easeIn) {
             self.bannerViewTopAnchorConstraint.constant = -self.bannerViewHeight
             navigationController.view.layoutIfNeeded()
+        }
+        animator.addCompletion { _ in
+            print("startHideBannerAnimation completion")
         }
         animator.startAnimation()
     }
