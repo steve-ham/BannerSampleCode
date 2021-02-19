@@ -10,47 +10,37 @@ import UIKit
 
 class ViewController: UIViewController {
     
-    private var bannerView: UIView!
-    private var bannerViewHeight: CGFloat!
-    private var bannerViewTopAnchorConstraint: NSLayoutConstraint!
-    private var animator: UIViewPropertyAnimator!
-    
-    private var timer: Timer?
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        configureBannerView()
-    }
-    
-    private func configureBannerView() {
-        guard let navigationController = navigationController else {
-            return
-        }
-        bannerViewHeight = UIApplication.shared.statusBarFrame.height + navigationController.navigationBar.frame.size.height + 150
-        let bannerViewFrame = CGRect(x: 0.0, y: 0, width: navigationController.navigationBar.frame.size.width, height: bannerViewHeight)
-        bannerView = BannerView(frame: bannerViewFrame)
-        navigationController.view.addSubview(bannerView)
-        
+    private lazy var bannerView: UIView = {
+        bannerViewHeight = UIApplication.shared.statusBarFrame.height + navigationController!.navigationBar.frame.size.height + 150
+        let bannerViewFrame = CGRect(x: 0.0, y: 0, width: navigationController!.navigationBar.frame.size.width, height: bannerViewHeight)
+        let bannerView = BannerView(frame: bannerViewFrame)
+        navigationController!.view.addSubview(bannerView)
         bannerView.translatesAutoresizingMaskIntoConstraints = false
         bannerView.widthAnchor.constraint(equalToConstant: bannerViewFrame.size.width).isActive = true
         bannerView.heightAnchor.constraint(equalToConstant: bannerViewHeight).isActive = true
-        bannerViewTopAnchorConstraint = bannerView.topAnchor.constraint(equalTo: navigationController.view.topAnchor, constant: -bannerViewHeight)
+        bannerView.leadingAnchor.constraint(equalTo: navigationController!.view.leadingAnchor).isActive = true
+        bannerView.trailingAnchor.constraint(equalTo: navigationController!.view.trailingAnchor).isActive = true
+        bannerViewTopAnchorConstraint = bannerView.topAnchor.constraint(equalTo: navigationController!.view.topAnchor, constant: -bannerViewHeight)
         bannerViewTopAnchorConstraint.isActive = true
-        bannerView.leadingAnchor.constraint(equalTo: navigationController.view.leadingAnchor).isActive = true
-        bannerView.trailingAnchor.constraint(equalTo: navigationController.view.trailingAnchor).isActive = true
-        
-        let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
-        bannerView.addGestureRecognizer(pan)
-    }
-    
-    var animationState: AnimationState = .isHidden
-    
-    enum AnimationState {
+        return bannerView
+    }()
+    private var bannerViewHeight: CGFloat!
+    private var bannerViewTopAnchorConstraint: NSLayoutConstraint!
+    private var animator: UIViewPropertyAnimator!
+    private var timer: Timer?
+    private var animationState: AnimationState = .isHidden
+    private enum AnimationState {
         case isHidden
         case isHiding
         case isShowing
     }
-    var fractionComplete: CGFloat!
+    private var fractionComplete: CGFloat!
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
+        bannerView.addGestureRecognizer(pan)
+    }
     
     @objc private func handlePan(_ recognizer: UIPanGestureRecognizer) {
         switch animationState {
@@ -101,7 +91,7 @@ class ViewController: UIViewController {
         }
     }
     
-    @IBAction func clickSwitch(_ sender: UISwitch) {
+    @IBAction func tapSwitch(_ sender: UISwitch) {
         if sender.isOn {
             timer?.invalidate()
             showBanner(afterDelay: 0, duration: 2)
@@ -141,12 +131,8 @@ class ViewController: UIViewController {
     }
     
     private func startShowBannerAnimation(duration: TimeInterval) {
-        guard let navigationController = navigationController else {
-            return
-        }
-        guard animationState == .isHiding || animationState == .isHidden else {
-            return
-        }
+        guard let navigationController = navigationController else { return }
+        guard animationState == .isHiding || animationState == .isHidden else { return }
         if animationState == .isHiding {
             animator.stopAnimation(true)
         }
@@ -158,19 +144,14 @@ class ViewController: UIViewController {
         }
         animator.addCompletion { [weak self] _ in
             guard let self = self else { return }
-            print("startShowBannerAnimation completion")
             self.hideBanner(afterDelay: 2, duration: 2)
         }
         animator.startAnimation()
     }
     
     private func startHideBannerAnimation(duration: TimeInterval) {
-        guard let navigationController = navigationController else {
-            return
-        }
-        guard animationState == .isShowing else {
-            return
-        }
+        guard let navigationController = navigationController else { return }
+        guard animationState == .isShowing else { return }
         animator.stopAnimation(true)
         animationState = .isHiding
         
@@ -180,7 +161,6 @@ class ViewController: UIViewController {
         }
         animator.addCompletion { [weak self] _ in
             guard let self = self else { return }
-            print("startHideBannerAnimation completion")
             self.animationState = .isHidden
         }
         animator.startAnimation()
